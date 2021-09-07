@@ -101,7 +101,7 @@ resources:
     IngestionStream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: kdg-solution-2-stream
+        Name: kdg-solution-3-stream
         ShardCount: 1
     
     OrderRecievedTopic:
