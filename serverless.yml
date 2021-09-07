@@ -1,28 +1,111 @@
-service: serverless-typescript
+service: kdg-solution-3
 
 frameworkVersion: '2'
 provider:
   name: aws
   runtime: nodejs14.x
   lambdaHashingVersion: 20201221
+  region: us-east-1
 
 package:
   individually: true
 
 plugins:
   - serverless-webpack
-
-functions:
-  worker:
-    handler: src/worker.default
-    events:
-      - http:
-          path: /
-          method: get
+  - serverless-iam-roles-per-function
 
 custom:
   webpack:
-    webpackConfig: 'webpack.config.js'
+    webpackConfig: webpack.config.js
     includeModules: true
-    packager: 'npm'
+    packager: npm
     excludeFiles: src/**/*.test.js
+
+functions:
+  IngestionWorker:
+    environment:
+      ORDER_RECIEVED_TOPIC: !Ref OrderRecievedTopic
+      RESTAURANT_NOTIFIED_TOPIC: !Ref RestaurantNotifiedTopic
+      ORDER_ACCEPTED_TOPIC: !Ref OrderAcceptedTopic
+      USER_NOTIFIED_TOPIC: !Ref UserNotifiedTopic
+      ORDER_COMPLETED_TOPIC: !Ref OrderCompletedTopic
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - IngestionStream
+              - Arn
+          batchSize: 100
+          parallelizationFactor: 1
+    handler: src/ingestion-worker.default
+    iamRoleStatements:
+      - Effect: Allow     
+        Action:
+          - sns:*        
+        Resource: !Ref OrderRecievedTopic
+      - Effect: Allow     
+        Action:
+          - sns:*        
+        Resource: !Ref RestaurantNotifiedTopic
+      - Effect: Allow     
+        Action:
+          - sns:*        
+        Resource: !Ref OrderAcceptedTopic
+      - Effect: Allow     
+        Action:
+          - sns:*        
+        Resource: !Ref UserNotifiedTopic
+      - Effect: Allow     
+        Action:
+          - sns:*        
+        Resource: !Ref OrderCompletedTopic
+  
+  OrderRecieved:
+    handler: src/order-recieved.default
+    events:
+      - sns:
+          arn: !Ref OrderRecievedTopic
+
+  RestaurantNotified:
+    handler: src/restaurant-notified.default
+    events:
+      - sns:
+          arn: !Ref RestaurantNotifiedTopic
+  
+  OrderAccepted:
+    handler: src/order-accepted.default
+    events:
+      - sns:
+          arn: !Ref OrderAcceptedTopic
+
+  UserNotified:
+    handler: src/user-notified.default
+    events:
+      - sns:
+          arn: !Ref UserNotifiedTopic
+
+  OrderCompleted:
+    handler: src/order-completed.default
+    events:
+      - sns:
+          arn: !Ref OrderCompletedTopic
+
+resources:
+  Resources:
+    IngestionStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: kdg-solution-2-stream
+        ShardCount: 1
+    
+    OrderRecievedTopic:
+      Type: AWS::SNS::Topic
+    RestaurantNotifiedTopic:
+      Type: AWS::SNS::Topic
+    OrderAcceptedTopic:
+      Type: AWS::SNS::Topic
+    UserNotifiedTopic:
+      Type: AWS::SNS::Topic
+    OrderCompletedTopic:
+      Type: AWS::SNS::Topic
