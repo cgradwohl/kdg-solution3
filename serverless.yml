@@ -66,30 +66,35 @@ functions:
     events:
       - sns:
           arn: !Ref OrderRecievedTopic
+          topicName: OrderRecievedTopic
 
   RestaurantNotified:
     handler: src/restaurant-notified.default
     events:
       - sns:
           arn: !Ref RestaurantNotifiedTopic
+          topicName: RestaurantNotifiedTopic
   
   OrderAccepted:
     handler: src/order-accepted.default
     events:
       - sns:
           arn: !Ref OrderAcceptedTopic
+          topicName: OrderAcceptedTopic
 
   UserNotified:
     handler: src/user-notified.default
     events:
       - sns:
           arn: !Ref UserNotifiedTopic
+          topicName: UserNotifiedTopic
 
   OrderCompleted:
     handler: src/order-completed.default
     events:
       - sns:
           arn: !Ref OrderCompletedTopic
+          topicName: OrderCompletedTopic
 
 resources:
   Resources:
@@ -101,11 +106,21 @@ resources:
     
     OrderRecievedTopic:
       Type: AWS::SNS::Topic
+      Properties:
+        TopicName: OrderRecievedTopic
     RestaurantNotifiedTopic:
       Type: AWS::SNS::Topic
+      Properties:
+        TopicName: RestaurantNotifiedTopic
     OrderAcceptedTopic:
       Type: AWS::SNS::Topic
+      Properties:
+        TopicName: OrderAcceptedTopic
     UserNotifiedTopic:
       Type: AWS::SNS::Topic
+      Properties:
+        TopicName: UserNotifiedTopic
     OrderCompletedTopic:
       Type: AWS::SNS::Topic
+      Properties:
+        TopicName: OrderCompletedTopic
